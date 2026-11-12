@@ -1,7 +1,8 @@
-"""Monthly per-group Excel report of the Chart Executor's trades, sent by email.
+"""Monthly per-group Excel report of the Chart Executor's trades, emailed and uploaded to Google Drive.
 
-Run daily (scripts/install-task.ps1). On the first run of a new month it reports the previous
-month once; later runs that month do nothing. Use --month to rebuild or resend any month.
+Run daily (scripts/install-task.ps1). On the first run of a new month it delivers the previous
+month once; a failed email or upload is retried on the next run. Use --month to rebuild or
+resend any month.
 """
 
 from __future__ import annotations
@@ -13,11 +14,12 @@ from datetime import datetime
 from logging.handlers import RotatingFileHandler
 
 from src.config import load_config
+from src.drive import build_service, upload_month
 from src.excel import workbook_path, write_group_workbook
 from src.journal import read_journal
 from src.mailer import build_message, send, summary_html
 from src.report import build_month, summarize
-from src.schedule import already_sent, mark_sent, month_label, parse_month, previous_month
+from src.schedule import is_done, mark_done, month_label, parse_month, previous_month
 
 _LOG = logging.getLogger("reports")
 
@@ -39,7 +41,8 @@ def setup_logging(logs_dir) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--month", help="YYYY-MM to report (default: previous month, once)")
-    parser.add_argument("--no-email", action="store_true", help="build the Excel files only")
+    parser.add_argument("--no-email", action="store_true", help="do not send the email")
+    parser.add_argument("--no-drive", action="store_true", help="do not upload to Google Drive")
     args = parser.parse_args(argv)
 
     cfg = load_config()
@@ -48,9 +51,14 @@ def main(argv: list[str] | None = None) -> int:
     year, month = parse_month(args.month) if args.month else previous_month(now)
     label = month_label(year, month)
     scheduled = args.month is None
-    if scheduled and already_sent(cfg.data_dir, label):
-        _LOG.info("Report %s already sent — nothing to do", label)
-        return 0
+    do_email = cfg.email.enabled and not args.no_email
+    do_drive = cfg.drive.enabled and not args.no_drive
+    if scheduled:
+        pending = [s for s, on in (("email", do_email), ("drive", do_drive)) if on and not is_done(cfg.data_dir, label, s)]
+        if not pending:
+            _LOG.info("Report %s already delivered — nothing to do", label)
+            return 0
+        do_email = "email" in pending
 
     journal = read_journal(cfg.journal_dir)
     if journal.untagged:
@@ -73,15 +81,31 @@ def main(argv: list[str] | None = None) -> int:
             label, group, name, s.trades, s.wins, s.losses, s.breakeven, s.not_executed, s.open, s.profit, path,
         )
 
-    if args.no_email or not cfg.email.enabled:
-        _LOG.info("Email skipped; files are in %s", cfg.reports_dir / label)
-        return 0
-    msg = build_message(cfg.email, f"Gold Trading — monthly report {label}", summary_html(label, rows), files)
-    send(cfg.email, msg)
-    _LOG.info("Report %s emailed to %s", label, ", ".join(cfg.email.to))
-    if scheduled:
-        mark_sent(cfg.data_dir, label, now)
-    return 0
+    failed = False
+    drive_link = ""
+    if do_drive:
+        try:
+            drive_link = upload_month(build_service(cfg.drive.token_file), cfg.drive.folder, label, files)
+            _LOG.info("Report %s uploaded to Google Drive: %s", label, drive_link)
+            if scheduled:
+                mark_done(cfg.data_dir, label, "drive", now)
+        except Exception:
+            _LOG.exception("Google Drive upload failed")
+            failed = True
+
+    if do_email:
+        try:
+            html = summary_html(label, rows, drive_link)
+            send(cfg.email, build_message(cfg.email, f"Gold Trading — monthly report {label}", html, files))
+            _LOG.info("Report %s emailed to %s", label, ", ".join(cfg.email.to))
+            if scheduled:
+                mark_done(cfg.data_dir, label, "email", now)
+        except Exception:
+            _LOG.exception("Email failed")
+            failed = True
+
+    _LOG.info("Files are in %s", cfg.reports_dir / label)
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

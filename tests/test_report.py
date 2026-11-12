@@ -6,7 +6,7 @@ from openpyxl import load_workbook
 from src.excel import workbook_path, write_group_workbook
 from src.journal import parse_tag, read_journal
 from src.report import BREAKEVEN, LOSS, NOT_EXECUTED, OPEN, PROFIT, build_month, summarize
-from src.schedule import already_sent, mark_sent, previous_month
+from src.schedule import is_done, mark_done, previous_month
 
 FRIDAY = time(23, 30)
 
@@ -92,6 +92,15 @@ def test_workbook_per_group(journal_dir: Path, tmp_path: Path):
 def test_previous_month_and_sent_once(tmp_path: Path):
     assert previous_month(datetime(2027, 1, 1)) == (2026, 12)
     assert previous_month(datetime(2026, 12, 1)) == (2026, 11)
-    assert not already_sent(tmp_path, "2026-11")
-    mark_sent(tmp_path, "2026-11", datetime(2026, 12, 1, 9, 0))
-    assert already_sent(tmp_path, "2026-11")
+    assert not is_done(tmp_path, "2026-11", "email")
+    mark_done(tmp_path, "2026-11", "email", datetime(2026, 12, 1, 9, 0))
+    assert is_done(tmp_path, "2026-11", "email")
+    assert not is_done(tmp_path, "2026-11", "drive")
+    mark_done(tmp_path, "2026-11", "drive", datetime(2026, 12, 1, 9, 0))
+    assert is_done(tmp_path, "2026-11", "drive") and is_done(tmp_path, "2026-11", "email")
+
+
+def test_sent_file_from_older_version_counts_as_emailed(tmp_path: Path):
+    (tmp_path / "sent.json").write_text('{"2026-10": "2026-11-01T09:00:00"}', encoding="utf-8")
+    assert is_done(tmp_path, "2026-10", "email")
+    assert not is_done(tmp_path, "2026-10", "drive")

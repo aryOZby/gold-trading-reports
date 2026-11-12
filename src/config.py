@@ -24,6 +24,14 @@ class EmailConfig:
 
 
 @dataclass(frozen=True)
+class DriveConfig:
+    enabled: bool
+    folder: str
+    client_file: Path
+    token_file: Path
+
+
+@dataclass(frozen=True)
 class AppConfig:
     tz: ZoneInfo
     journal_dir: Path
@@ -34,6 +42,7 @@ class AppConfig:
     friday_close: time
     groups: dict[int, str]
     email: EmailConfig
+    drive: DriveConfig
 
     def group_name(self, slot: int) -> str:
         return self.groups.get(slot, f"Group {slot}")
@@ -54,6 +63,7 @@ def load_config(path: Path | None = None) -> AppConfig:
     to = mail.get("to") or []
     if isinstance(to, str):
         to = [to]
+    drive = raw.get("drive") or {}
     return AppConfig(
         tz=ZoneInfo(str(raw.get("timezone") or "Asia/Jerusalem")),
         journal_dir=_resolve(str(raw.get("journal_dir") or "journal")),
@@ -71,5 +81,11 @@ def load_config(path: Path | None = None) -> AppConfig:
             password=os.getenv("SMTP_PASSWORD", ""),
             sender=str(mail.get("sender") or username),
             to=[str(x) for x in to],
+        ),
+        drive=DriveConfig(
+            enabled=bool(drive.get("enabled", False)),
+            folder=str(drive.get("folder") or "Gold Trading Reports"),
+            client_file=_resolve(str(drive.get("client_file") or "secrets/drive_client.json")),
+            token_file=_resolve(str(drive.get("token_file") or "secrets/drive_token.json")),
         ),
     )

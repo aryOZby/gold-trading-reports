@@ -11,7 +11,7 @@ from .report import Summary
 _XLSX = ("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
-def summary_html(month_label: str, rows: list[tuple[str, Summary]]) -> str:
+def summary_html(month_label: str, rows: list[tuple[str, Summary]], drive_link: str = "") -> str:
     head = "".join(
         f"<th style='padding:4px 8px;background:#1F3864;color:#fff'>{h}</th>"
         for h in ("Group", "Trades", "Profit", "Loss", "Breakeven", "Not executed", "Open", "Win rate", "Net profit $")
@@ -23,11 +23,13 @@ def summary_html(month_label: str, rows: list[tuple[str, Summary]]) -> str:
         cells = [escape(name), s.trades, s.wins, s.losses, s.breakeven, s.not_executed, s.open, rate]
         body += "<tr>" + "".join(f"<td style='padding:4px 8px;border:1px solid #ddd'>{c}</td>" for c in cells)
         body += f"<td style='padding:4px 8px;border:1px solid #ddd;color:{color}'>{s.profit:,.2f}</td></tr>"
+    drive = f"<p>The same files are in Google Drive: <a href='{escape(drive_link)}'>{escape(month_label)}</a>.</p>" if drive_link else ""
     return (
         f"<p>Gold Trading — monthly report for <b>{escape(month_label)}</b> (Israel time).</p>"
         f"<table style='border-collapse:collapse;font-family:Arial;font-size:13px'><tr>{head}</tr>{body}</table>"
         "<p>One Excel file per group is attached: <i>Trades</i> (one row per signal, N numbering), "
         "<i>Positions</i> (every position or order of each signal), and <i>Summary</i> (totals and per strategy).</p>"
+        f"{drive}"
     )
 
 

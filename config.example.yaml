@@ -25,3 +25,11 @@ email:
   username: ""        # the Gmail address that sends; password goes in .env as SMTP_PASSWORD
   sender: ""          # defaults to username
   to: []              # one or more recipients
+
+# Upload the workbooks to Google Drive: <folder>/<YYYY-MM>/, replacing files of the same name.
+# One-time setup: scripts\authorize_drive.py (see README).
+drive:
+  enabled: false
+  folder: Gold Trading Reports
+  client_file: secrets/drive_client.json
+  token_file: secrets/drive_token.json

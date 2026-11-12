@@ -1,0 +1,27 @@
+timezone: Asia/Jerusalem
+
+# Written by the Chart Executor EA (closed.csv, open.csv, unfilled.csv).
+journal_dir: C:\Users\Administrator\AppData\Roaming\MetaQuotes\Terminal\Common\Files\gt_journal
+reports_dir: reports
+
+# A stop closed within this distance of the entry counts as breakeven (XAUUSD pip = 0.1).
+breakeven_tolerance: 0.1
+# Closes by the EA from this time on Friday (Israel) are the weekly Friday close.
+friday_close: "23:30"
+
+# Slot number (G in the trade comment) -> group name used in file names and tables.
+groups:
+  1: VIP SIGNALS ROOM (LIFETIME)
+  2: Technical Pips
+  3: profit__kings
+  4: GOLD SNIPER
+  5: Trade With Samder
+  6: GOLD BULLET SIGNALS
+
+email:
+  enabled: true
+  smtp_host: smtp.gmail.com
+  smtp_port: 587
+  username: ""        # the Gmail address that sends; password goes in .env as SMTP_PASSWORD
+  sender: ""          # defaults to username
+  to: []              # one or more recipients

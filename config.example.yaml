@@ -17,6 +17,7 @@ groups:
   4: GOLD SNIPER
   5: Trade With Samder
   6: GOLD BULLET SIGNALS
+  7: Alphabet Forex
 
 # One Google sign-in for Gmail and Drive. One-time setup: scripts\authorize_google.py (see README).
 google:

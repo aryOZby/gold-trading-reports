@@ -85,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     drive_link = ""
     if do_drive:
         try:
-            drive_link = upload_month(build_service(cfg.drive.token_file), cfg.drive.folder, label, files)
+            drive_link = upload_month(build_service(cfg.google.token_file), cfg.drive.folder, label, files)
             _LOG.info("Report %s uploaded to Google Drive: %s", label, drive_link)
             if scheduled:
                 mark_done(cfg.data_dir, label, "drive", now)
@@ -96,7 +96,8 @@ def main(argv: list[str] | None = None) -> int:
     if do_email:
         try:
             html = summary_html(label, rows, drive_link)
-            send(cfg.email, build_message(cfg.email, f"Gold Trading — monthly report {label}", html, files))
+            msg = build_message(cfg.email, f"Gold Trading — monthly report {label}", html, files)
+            send(cfg.email, msg, cfg.google.token_file)
             _LOG.info("Report %s emailed to %s", label, ", ".join(cfg.email.to))
             if scheduled:
                 mark_done(cfg.data_dir, label, "email", now)

@@ -18,18 +18,22 @@ groups:
   5: Trade With Samder
   6: GOLD BULLET SIGNALS
 
+# One Google sign-in for Gmail and Drive. One-time setup: scripts\authorize_google.py (see README).
+google:
+  client_file: secrets/google_client.json
+  token_file: secrets/google_token.json
+
 email:
   enabled: true
+  method: gmail_api   # gmail_api = send as the signed-in Google account; smtp = App Password below
+  to: []              # one or more recipients
+  sender: ""          # optional From; gmail_api defaults to the signed-in account
+  # smtp only — password goes in .env as SMTP_PASSWORD
   smtp_host: smtp.gmail.com
   smtp_port: 587
-  username: ""        # the Gmail address that sends; password goes in .env as SMTP_PASSWORD
-  sender: ""          # defaults to username
-  to: []              # one or more recipients
+  username: ""
 
 # Upload the workbooks to Google Drive: <folder>/<YYYY-MM>/, replacing files of the same name.
-# One-time setup: scripts\authorize_drive.py (see README).
 drive:
   enabled: false
   folder: Gold Trading Reports
-  client_file: secrets/drive_client.json
-  token_file: secrets/drive_token.json

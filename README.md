@@ -48,22 +48,23 @@ py -3 -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-In `config.yaml` set `email.username` (the sending Gmail address) and `email.to`. In `.env` set `SMTP_PASSWORD` to a Gmail [App Password](https://myaccount.google.com/apppasswords) — not the account password.
+In `config.yaml` set `email.to` and `drive.enabled: true`.
 
-### Google Drive (one time)
+### Google sign-in (one time)
 
-1. In [Google Cloud Console](https://console.cloud.google.com/), signed in with the account that should hold the reports, create a project.
-2. **APIs & Services → Library** → enable **Google Drive API**.
+Email is sent through the Gmail API as the signed-in account and the workbooks are uploaded with the same sign-in, so no App Password is needed. (`email.method: smtp` with `SMTP_PASSWORD` in `.env` is still available.)
+
+1. In [Google Cloud Console](https://console.cloud.google.com/), signed in with the account that sends and keeps the reports, create a project.
+2. **APIs & Services → Library** → enable **Google Drive API** and **Gmail API**.
 3. **APIs & Services → OAuth consent screen**: user type *External*, fill in the app name and emails, then **Publish app** (status *In production*). In *Testing* status the sign-in expires after 7 days.
-4. **APIs & Services → Credentials → Create credentials → OAuth client ID**, type **Desktop app**. Download the JSON and save it on the server as `secrets\drive_client.json`.
-5. Sign in once on the server. A browser opens; choose the account and allow access (past the "Google hasn't verified this app" notice: *Advanced → Go to …*):
+4. **APIs & Services → Credentials → Create credentials → OAuth client ID**, type **Desktop app**. Download the JSON and save it on the server as `secrets\google_client.json`.
+5. Sign in once on the server. A browser opens; choose the account, get past the "Google hasn't verified this app" notice (*Advanced → Go to …*), and tick both permissions (Drive files and sending email):
 
    ```bat
-   .venv\Scripts\python.exe scripts\authorize_drive.py
+   .venv\Scripts\python.exe scripts\authorize_google.py
    ```
 
-   The token is saved to `secrets\drive_token.json` and refreshed automatically. `secrets\` is gitignored.
-6. In `config.yaml` set `drive.enabled: true`.
+   The token is saved to `secrets\google_token.json` and refreshed automatically. `secrets\` is gitignored.
 
 ### Test
 

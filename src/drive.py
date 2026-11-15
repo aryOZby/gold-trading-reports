@@ -7,30 +7,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-SCOPES = ["https://www.googleapis.com/auth/drive.file"]
+from .google_auth import DRIVE_SCOPE, load_credentials
+
 FOLDER_MIME = "application/vnd.google-apps.folder"
 XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-
-
-def load_credentials(token_path: Path):
-    from google.auth.transport.requests import Request
-    from google.oauth2.credentials import Credentials
-
-    if not token_path.exists():
-        raise FileNotFoundError(f"{token_path} is missing — run scripts\\authorize_drive.py once")
-    creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
-    if not creds.valid:
-        if not creds.refresh_token:
-            raise RuntimeError("Drive token cannot be refreshed — run scripts\\authorize_drive.py again")
-        creds.refresh(Request())
-        token_path.write_text(creds.to_json(), encoding="utf-8")
-    return creds
 
 
 def build_service(token_path: Path):
     from googleapiclient.discovery import build
 
-    return build("drive", "v3", credentials=load_credentials(token_path), cache_discovery=False)
+    return build("drive", "v3", credentials=load_credentials(token_path, DRIVE_SCOPE), cache_discovery=False)
 
 
 def _quoted(name: str) -> str:

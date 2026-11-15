@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 @dataclass(frozen=True)
 class EmailConfig:
     enabled: bool
+    method: str
     smtp_host: str
     smtp_port: int
     username: str
@@ -24,11 +25,15 @@ class EmailConfig:
 
 
 @dataclass(frozen=True)
+class GoogleConfig:
+    client_file: Path
+    token_file: Path
+
+
+@dataclass(frozen=True)
 class DriveConfig:
     enabled: bool
     folder: str
-    client_file: Path
-    token_file: Path
 
 
 @dataclass(frozen=True)
@@ -43,6 +48,7 @@ class AppConfig:
     groups: dict[int, str]
     email: EmailConfig
     drive: DriveConfig
+    google: GoogleConfig
 
     def group_name(self, slot: int) -> str:
         return self.groups.get(slot, f"Group {slot}")
@@ -64,6 +70,10 @@ def load_config(path: Path | None = None) -> AppConfig:
     if isinstance(to, str):
         to = [to]
     drive = raw.get("drive") or {}
+    google = raw.get("google") or {}
+    method = str(mail.get("method") or "gmail_api")
+    if method not in ("gmail_api", "smtp"):
+        raise ValueError(f"email.method must be gmail_api or smtp, got {method}")
     return AppConfig(
         tz=ZoneInfo(str(raw.get("timezone") or "Asia/Jerusalem")),
         journal_dir=_resolve(str(raw.get("journal_dir") or "journal")),
@@ -75,6 +85,7 @@ def load_config(path: Path | None = None) -> AppConfig:
         groups={int(k): str(v) for k, v in (raw.get("groups") or {}).items()},
         email=EmailConfig(
             enabled=bool(mail.get("enabled", False)),
+            method=method,
             smtp_host=str(mail.get("smtp_host") or "smtp.gmail.com"),
             smtp_port=int(mail.get("smtp_port") or 587),
             username=username,
@@ -85,7 +96,9 @@ def load_config(path: Path | None = None) -> AppConfig:
         drive=DriveConfig(
             enabled=bool(drive.get("enabled", False)),
             folder=str(drive.get("folder") or "Gold Trading Reports"),
-            client_file=_resolve(str(drive.get("client_file") or "secrets/drive_client.json")),
-            token_file=_resolve(str(drive.get("token_file") or "secrets/drive_token.json")),
+        ),
+        google=GoogleConfig(
+            client_file=_resolve(str(google.get("client_file") or "secrets/google_client.json")),
+            token_file=_resolve(str(google.get("token_file") or "secrets/google_token.json")),
         ),
     )

@@ -1,7 +1,8 @@
 timezone: Asia/Jerusalem
 
-# Written by the Chart Executor EA (closed.csv, open.csv, unfilled.csv).
-journal_dir: C:\Users\Administrator\AppData\Roaming\MetaQuotes\Terminal\Common\Files\gt_journal
+# Written by the Chart Executor EA (closed.csv, open.csv, unfilled.csv), one folder per MT5 account.
+# Use the account number of the account to report on, e.g. ...\gt_journal\12345678.
+journal_dir: C:\Users\Administrator\AppData\Roaming\MetaQuotes\Terminal\Common\Files\gt_journal\<account number>
 reports_dir: reports
 
 # A stop closed within this distance of the entry counts as breakeven (XAUUSD pip = 0.1).

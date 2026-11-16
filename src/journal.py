@@ -1,4 +1,4 @@
-"""Readers for the CSV journal the Chart Executor EA keeps in MT5 Common\\Files\\gt_journal."""
+"""Readers for the CSV journal the Chart Executor EA keeps in MT5 Common\\Files\\gt_journal\\<account>."""
 
 from __future__ import annotations
 

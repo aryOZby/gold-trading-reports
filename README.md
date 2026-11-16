@@ -10,7 +10,7 @@ Reporting service for the gold-trading desk. Once a month it turns the Chart Exe
 
 ## Source data
 
-The Chart Executor EA keeps a journal in MT5 `Common\Files\gt_journal\` (Israel time):
+The Chart Executor EA keeps a journal per MT5 account in `Common\Files\gt_journal\<account number>\` (Israel time); set `journal_dir` to the account to report on:
 
 - `closed.csv` — every closing deal, rebuilt from the broker history
 - `open.csv` — snapshot of running positions and pending orders
